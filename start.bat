@@ -1,53 +1,44 @@
 @echo off
-chcp 65001 >nul
-title FuturePath AI - сервер
-
-REM Переходим в папку, где лежит этот файл (работает из любого места)
+title FuturePath AI
 cd /d "%~dp0"
-
 echo.
-echo === FuturePath AI: запуск ===
+echo === FuturePath AI: start ===
 echo.
-
-REM 1. Проверяем, установлен ли Node.js
 where node >nul 2>nul
 if errorlevel 1 (
-    echo [ОШИБКА] Node.js не найден. Установите версию 20 или новее с https://nodejs.org
+  echo [ERROR] Node.js not found. Install Node.js 20+ from https://nodejs.org
+  pause
+  exit /b 1
+)
+if not exist ".env" (
+  copy /y ".env.example" ".env" >nul
+  echo [!] Created .env from .env.example.
+  echo     Fill DATABASE_URL and DIRECT_DATABASE_URL with your PostgreSQL connection, then run start.bat again.
+  notepad ".env"
+  pause
+  exit /b 1
+)
+if not exist "node_modules\.bin\next.cmd" (
+  echo [1/3] Installing dependencies, this takes a few minutes...
+  call npm install
+  if errorlevel 1 (
+    echo [ERROR] npm install failed. See the messages above.
     pause
     exit /b 1
-)
-
-REM 2. Если библиотек нет, устанавливаем их (делается один раз)
-if not exist "node_modules" (
-    echo [1/3] Устанавливаю библиотеки, это может занять несколько минут...
-    call npm install
-    if errorlevel 1 (
-        echo [ОШИБКА] npm install не выполнился. Смотрите текст выше.
-        pause
-        exit /b 1
-    )
+  )
 ) else (
-    echo [1/3] Библиотеки уже установлены.
+  echo [1/3] Dependencies are installed.
 )
-
-REM 3. Если базы данных нет, создаём её (делается один раз)
-if not exist "prisma\dev.db" (
-    echo [2/3] Создаю базу данных...
-    call npx prisma db push
-    if errorlevel 1 (
-        echo [ОШИБКА] Не удалось создать базу данных. Смотрите текст выше.
-        pause
-        exit /b 1
-    )
-) else (
-    echo [2/3] База данных уже есть.
+echo [2/3] Preparing the database...
+call npx prisma generate >nul
+call npx prisma migrate deploy
+if errorlevel 1 (
+  echo [ERROR] Database is not reachable. Check DATABASE_URL in .env and that PostgreSQL is running.
+  pause
+  exit /b 1
 )
-
-REM 4. Запускаем сайт на порту 3001
-echo [3/3] Запускаю сервер на http://localhost:3001
-echo Чтобы остановить сервер, закройте это окно или нажмите Ctrl+C.
+echo [3/3] Starting http://localhost:3001  (close this window or press Ctrl+C to stop)
 echo.
 start "" http://localhost:3001
 call npm run dev
-
 pause
