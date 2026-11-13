@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "next lint",
     "db:push": "prisma db push",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

@@ -11,25 +11,36 @@ datasource db {
 
 // Демо-профиль: без пароля, привязан к cookie браузера
 model Profile {
-  id        String         @id @default(cuid())
-  name      String         @default("Гость")
-  createdAt DateTime       @default(now())
-  results   TestResult[]
-  progress  PlanProgress[] // старая таблица (день плана), больше не используется
-  tasks     TaskProgress[]
-  aiRecords AiRecord[]
+  id                 String            @id @default(cuid())
+  name               String            @default("Гость")
+  createdAt          DateTime          @default(now())
+  results            TestResult[]
+  progress           PlanProgress[] // старая таблица (день плана), больше не используется
+  tasks              TaskProgress[]
+  aiRecords          AiRecord[]
   selectedProfession String? // выбранная профессия (id из каталога), null — ещё не выбрана
-  skillChecks SkillCheck[]
-  practiceAnswers PracticeAnswer[]
-  lessonReads LessonRead[]
-  challengeAnswers ChallengeAnswer[]
-  challengeAiHelps ChallengeAiHelp[]
-  simRuns SimRun[]
-  mentorMessages MentorMessage[]
-  interviewRuns InterviewRun[]
-  softRuns SoftRun[]
-  portfolioItems PortfolioItem[]
-  cycleRuns CycleRun[]
+  // --- FuturePath 2.0: онбординг и мотивация (добавлено аддитивно, у всех полей есть значения по умолчанию) ---
+  lang               String            @default("ru") // ru | kk | en
+  ageGroup           String? // u14 | 14_17 | 18_24 | 25_34 | 35p
+  education          String? // school | college | university | working | other
+  goal               String? // choose | learn | skills | all
+  interests          String            @default("") // id направлений через запятую, до 4
+  onboardedAt        DateTime? // null — онбординг не завершён
+  dailyGoalXp        Int               @default(20)
+  xp                 Int               @default(0)
+  streakDays         Int               @default(0)
+  lastActiveDay      String? // YYYY-MM-DD
+  skillChecks        SkillCheck[]
+  practiceAnswers    PracticeAnswer[]
+  lessonReads        LessonRead[]
+  challengeAnswers   ChallengeAnswer[]
+  challengeAiHelps   ChallengeAiHelp[]
+  simRuns            SimRun[]
+  mentorMessages     MentorMessage[]
+  interviewRuns      InterviewRun[]
+  softRuns           SoftRun[]
+  portfolioItems     PortfolioItem[]
+  cycleRuns          CycleRun[]
 }
 
 // Human + AI Challenge: ответы пользователя. mode "solo" — самостоятельно, "ai" — с подсказками ИИ.
@@ -213,16 +224,16 @@ model PortfolioItem {
 
 // Единый цикл обучения: один проход по одному навыку профессии.
 model CycleRun {
-  id           String   @id @default(cuid())
+  id           String        @id @default(cuid())
   profileId    String
-  profile      Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profile      Profile       @relation(fields: [profileId], references: [id], onDelete: Cascade)
   professionId String
   skill        String
-  futureSeen   Boolean  @default(false)
-  aiSkipped    Boolean  @default(false)
-  aiFailures   Int      @default(0)
+  futureSeen   Boolean       @default(false)
+  aiSkipped    Boolean       @default(false)
+  aiFailures   Int           @default(0)
   aiReflection String?
-  createdAt    DateTime @default(now())
+  createdAt    DateTime      @default(now())
   answers      CycleAnswer[]
   hints        CycleAiHelp[]
 }

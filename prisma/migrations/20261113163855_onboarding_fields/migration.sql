@@ -1,0 +1,11 @@
+-- AlterTable
+ALTER TABLE "Profile" ADD COLUMN     "ageGroup" TEXT,
+ADD COLUMN     "dailyGoalXp" INTEGER NOT NULL DEFAULT 20,
+ADD COLUMN     "education" TEXT,
+ADD COLUMN     "goal" TEXT,
+ADD COLUMN     "interests" TEXT NOT NULL DEFAULT '',
+ADD COLUMN     "lang" TEXT NOT NULL DEFAULT 'ru',
+ADD COLUMN     "lastActiveDay" TEXT,
+ADD COLUMN     "onboardedAt" TIMESTAMP(3),
+ADD COLUMN     "streakDays" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "xp" INTEGER NOT NULL DEFAULT 0;

@@ -1,32 +1,35 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { Nav } from "@/components/Nav";
+import { AppShell } from "@/components/AppShell";
+import { I18nProvider } from "@/i18n/client";
+import { getLang } from "@/i18n/server";
 
 export const metadata: Metadata = {
-  title: "FuturePath AI — подготовка к работе в эпоху ИИ",
-  description: "Проверь навыки без ИИ, подтяни пробелы, поработай с ИИ и проверь прогресс заново. Учебный прототип хакатона.",
+  title: "FuturePath AI — профессии и навыки будущего",
+  description: "Короткие уроки, симуляции профессий и ИИ-наставник. Учебный прототип: результаты теста — подсказка для размышления, а не диагноз.",
 };
+
+export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#28A86B" };
 
 // Скрипт выставляет тему до отрисовки, чтобы не было мигания
 const themeScript = "try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark')}catch(e){}";
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const lang = await getLang();
   return (
-    <html lang="ru" suppressHydrationWarning>
+    <html lang={lang} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        {/* Шрифты подключены в корневом layout для всех страниц (App Router), поэтому правило про отдельные страницы здесь не применимо */}
+        {/* Nunito поддерживает кириллицу и казахские буквы (cyrillic-ext) */}
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&family=Golos+Text:wght@400;500;600;700&display=swap&subset=cyrillic" />
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap&subset=cyrillic,cyrillic-ext" />
       </head>
       <body>
-        <Nav />
-        <main className="mx-auto max-w-5xl px-4 py-8 sm:py-10">{children}</main>
-        <footer className="mx-auto mt-6 max-w-5xl border-t border-slate-200 px-4 py-6 text-xs leading-relaxed text-slate-500 dark:border-slate-800">
-          FuturePath AI — учебный прототип хакатона. Тест не является научной психодиагностикой: это подсказка для размышления, а не приговор.
-        </footer>
+        <I18nProvider lang={lang}>
+          <AppShell>{children}</AppShell>
+        </I18nProvider>
       </body>
     </html>
   );
