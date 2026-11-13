@@ -32,7 +32,7 @@
 Нужны Node.js 20+ и PostgreSQL 14+ (или база Neon).
 
 ```bash
-git clone https://github.com/<owner>/FuturePath-AI.git
+git clone https://github.com/nbas1k/FuturePath-AI.git
 cd FuturePath-AI
 npm install
 cp .env.example .env
