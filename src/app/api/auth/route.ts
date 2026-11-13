@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { cookies } from "next/headers";
 import { prisma } from "@/backend/db";
 import { PROFILE_COOKIE } from "@/backend/cookies";
@@ -41,14 +42,26 @@ export async function POST(req: Request) {
   const { email, password } = cred.data;
 
   if (d.action === "register") {
-    if (await prisma.user.findUnique({ where: { email } })) return NextResponse.json({ error: "Этот email уже зарегистрирован. Войдите." }, { status: 409 });
-    const user = await prisma.user.create({ data: { email, passwordHash: hashPassword(password) } });
-    // Анонимный профиль этого браузера (с прогрессом) привязывается к аккаунту, чтобы ничего не потерять
     const anonId = (await cookies()).get(PROFILE_COOKIE)?.value;
-    const anon = anonId ? await prisma.profile.findUnique({ where: { id: anonId } }) : null;
-    if (anon && !anon.userId) await prisma.profile.update({ where: { id: anon.id }, data: { userId: user.id } });
-    else await prisma.profile.create({ data: { userId: user.id } });
-    await startSession(user.id);
+    const passwordHash = hashPassword(password);
+    let userId: string;
+    try {
+      userId = await prisma.$transaction(async (tx) => {
+        const user = await tx.user.create({ data: { email, passwordHash } });
+        // Only claim a still-anonymous profile, even if two requests arrive together.
+        const claimed = anonId
+          ? await tx.profile.updateMany({ where: { id: anonId, userId: null }, data: { userId: user.id } })
+          : { count: 0 };
+        if (!claimed.count) await tx.profile.create({ data: { userId: user.id } });
+        return user.id;
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+        return NextResponse.json({ error: "Этот email уже зарегистрирован. Войдите." }, { status: 409 });
+      }
+      throw error;
+    }
+    await startSession(userId);
     return NextResponse.json({ ok: true, email });
   }
 

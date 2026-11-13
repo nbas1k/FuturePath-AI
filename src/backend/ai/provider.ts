@@ -42,11 +42,11 @@ export async function askAi(config: AiConfig, prompt: AiPrompt, maxTokens = 700)
     );
     text = data?.content?.find?.((b: any) => b.type === "text")?.text;
   } else {
-    // openai, openai-compatible и antigravity (формат chat/completions)
+    // OpenAI-compatible chat completions.
     const data = await post(
       `${config.baseUrl || "https://api.openai.com/v1"}/chat/completions`,
       { authorization: `Bearer ${config.apiKey}` },
-      { model: config.model, max_tokens: maxTokens, messages: [{ role: "system", content: prompt.system }, { role: "user", content: prompt.user }] },
+      { model: config.model, ...(config.provider === "groq" ? { max_completion_tokens: maxTokens } : { max_tokens: maxTokens }), messages: [{ role: "system", content: prompt.system }, { role: "user", content: prompt.user }] },
       config.timeoutMs,
     );
     text = data?.choices?.[0]?.message?.content;

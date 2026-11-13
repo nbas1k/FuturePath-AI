@@ -10,3 +10,16 @@ prisma/dev.db*
 demo-notes.local.md
 test-results/
 playwright-report/
+
+# Jury and deployment credentials
+.env*.local
+.vercel/
+.npmrc
+*.pem
+*.key
+*.pfx
+*.p12
+credentials*.json
+secrets*.json
+*.local.json
+.jury-check-*/

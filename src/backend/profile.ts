@@ -10,7 +10,7 @@ export async function getProfile() {
   if (user) return user.profile;
   const id = (await cookies()).get(PROFILE_COOKIE)?.value;
   if (!id) return null;
-  return prisma.profile.findUnique({ where: { id } });
+  return prisma.profile.findFirst({ where: { id, userId: null } });
 }
 
 // Создаёт профиль и cookie. Вызывать ТОЛЬКО когда профиль действительно нужен (сохранение результата).
