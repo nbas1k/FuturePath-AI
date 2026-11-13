@@ -4,6 +4,7 @@
 import type { CategoryId } from "@/data/categories";
 import { effectiveDirections, type Profession } from "@/data/professions";
 import { LETTERS, SKILL_DIMS, CONDITIONS, type Letter, type SkillDim, type Condition } from "./items";
+import { EXTRA_BY_ID } from "@/catalog/extras";
 
 export type CareerProfile = {
   riasec: Record<Letter, number>; // 0..3 — насколько тип важен для профессии
@@ -34,6 +35,7 @@ export const CATEGORY_PROFILES: Record<CategoryId, CareerProfile> = {
   agri: { riasec: r(3, 2, 0, 0, 0, 1), conditions: c(2, 5, 3, 4, 2), needs: n(0.5, 0.5, 0.3, 0.3, 0.5, 0.3, 0.6, 0.9, 0.6) },
   production: { riasec: r(3, 1, 0, 0, 0, 2), conditions: c(2, 4, 2, 2, 4), needs: n(0.5, 0.6, 0.3, 0.4, 0.7, 0.2, 0.8, 0.9, 0.3) },
   tourism: { riasec: r(0, 0, 1, 3, 2, 1), conditions: c(5, 4, 5, 3, 4), needs: n(0.3, 0.3, 0.8, 1, 0.3, 0.6, 0.8, 0.3, 0.3) },
+  science: { riasec: r(1, 3, 1, 0, 0, 1), conditions: c(2, 3, 3, 4, 2), needs: n(0.7, 0.8, 0.6, 0.3, 0.6, 0.5, 0.6, 0.4, 1) },
   social: { riasec: r(0, 1, 1, 3, 1, 0), conditions: c(5, 2, 4, 3, 3), needs: n(0.2, 0.4, 0.9, 1, 0.2, 0.5, 0.6, 0.1, 0.5) },
 };
 
@@ -48,6 +50,7 @@ const DIRECTION_RIASEC: Record<string, Record<Letter, number>> = {
 };
 
 const DIRECTION_SHARE = 0.3; // доля направлений в итоговом профиле профессии
+const HOLLAND_SHARE = 0.5; // доля индивидуального кода Холланда (Этап 4) против профиля категории и направлений
 
 export function professionProfile(p: Profession): CareerProfile {
   const base = CATEGORY_PROFILES[p.category];
@@ -63,6 +66,13 @@ export function professionProfile(p: Profession): CareerProfile {
   const riasec = Object.fromEntries(
     LETTERS.map((l) => [l, total ? (1 - DIRECTION_SHARE) * base.riasec[l] + DIRECTION_SHARE * (add[l] / total) : base.riasec[l]]),
   ) as Record<Letter, number>;
+  // Этап 4: индивидуальный код Холланда профессии (3 буквы: 3/2/1 балла) смешивается с профилем категории
+  const code = EXTRA_BY_ID.get(p.id)?.code;
+  if (code) {
+    const w = Object.fromEntries(LETTERS.map((l) => [l, 0])) as Record<Letter, number>;
+    [...code].slice(0, 3).forEach((ch, i) => { if ((LETTERS as readonly string[]).includes(ch)) w[ch as Letter] = 3 - i; });
+    for (const l of LETTERS) riasec[l] = (1 - HOLLAND_SHARE) * riasec[l] + HOLLAND_SHARE * w[l];
+  }
   return { riasec, conditions: base.conditions, needs: base.needs };
 }
 

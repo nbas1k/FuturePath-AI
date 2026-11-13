@@ -1,4 +1,5 @@
 import type { MessageKey } from "./ru";
+import { catalogEn } from "./catalog";
 import { assessmentEn } from "./assessment";
 
 export const en: Record<MessageKey, string> = {
@@ -87,5 +88,6 @@ export const en: Record<MessageKey, string> = {
   "home.rec.progress": "See your progress",
   "profile.language": "Language",
   ...assessmentEn,
+  ...catalogEn,
 
 };

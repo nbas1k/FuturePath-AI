@@ -1,100 +1,94 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { PROFESSIONS, LEVEL_LABELS, LEVEL_DIFFICULTY, professionById } from "@/data/professions";
-import { categoryName, subjectAreaName } from "@/data/categories";
-import { contextFromResult, loadUserResult } from "@/backend/catalogContext";
+import { CAREERS, UNIVERSAL_SKILLS, getCareer } from "@/catalog/build";
+import { directionKey } from "@/catalog/directions";
+import { prisma } from "@/backend/db";
+import { getProfile } from "@/backend/profile";
+import { getT } from "@/i18n/server";
+import type { MessageKey } from "@/i18n";
 import { FavoriteButton } from "@/components/FavoriteButton";
+import { ChooseCareer } from "@/components/ChooseCareer";
+import { IntroChallenge } from "@/components/IntroChallenge";
 
 export function generateStaticParams() {
-  return PROFESSIONS.map((p) => ({ id: p.id }));
+  return CAREERS.map((c) => ({ id: c.id }));
 }
-
 export const dynamicParams = false;
+export const dynamic = "force-dynamic";
 
-function Section({ title, items }: { title: string; items: string[] }) {
+function List({ title, items }: { title: string; items: string[] }) {
   return (
     <section className="card">
-      <h2 className="mb-2 font-semibold">{title}</h2>
-      <ul className="list-disc space-y-1 pl-5 text-sm text-slate-600 dark:text-slate-400">{items.map((t) => <li key={t}>{t}</li>)}</ul>
+      <h2 className="mb-2 font-extrabold">{title}</h2>
+      <ul className="list-disc space-y-1 pl-5 text-sm text-slate-700 dark:text-slate-300">{items.map((x) => <li key={x}>{x}</li>)}</ul>
     </section>
   );
 }
 
-export default async function ProfessionPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const p = professionById(id);
-  if (!p) notFound();
+function Level({ level }: { level: 1 | 2 | 3 }) {
+  return <span className="inline-flex gap-1" aria-hidden>{[1, 2, 3].map((i) => <span key={i} className={`h-2.5 w-5 rounded-full ${i <= level ? "bg-indigo-500" : "bg-slate-200 dark:bg-slate-700"}`} />)}</span>;
+}
 
-  const user = await loadUserResult();
-  const ctx = contextFromResult(user);
-  const match = user.status === "ok" ? user.result.professions.find((m) => m.profession.id === p.id) : undefined;
-  const sameCategory = PROFESSIONS.filter((x) => x.category === p.category && x.id !== p.id).slice(0, 4);
-  const difficulty = LEVEL_DIFFICULTY[p.level];
+export default async function CareerPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const c = getCareer(id);
+  if (!c) notFound();
+  const { t, lang } = await getT();
+  const profile = await getProfile();
+  const attempt = profile ? await prisma.introAttempt.findUnique({ where: { profileId_careerId: { profileId: profile.id, careerId: c.id } } }) : null;
+  const same = CAREERS.filter((x) => x.direction === c.direction && x.id !== c.id).slice(0, 4);
 
   return (
     <div className="space-y-5">
-      <Link href="/professions" className="text-sm text-indigo-600 dark:text-indigo-400">← Все профессии</Link>
+      <Link href="/professions" className="text-sm font-bold text-indigo-700 dark:text-indigo-300">← {t("cat.back")}</Link>
 
       <header className="space-y-2">
-        <span className="chip">{categoryName(p.category)}</span>
-        <h1 className="h2">{p.title}</h1>
-        <p className="text-slate-600 dark:text-slate-400">{p.description}</p>
-        <div className="flex flex-wrap gap-2 pt-1">
-          <FavoriteButton id={p.id} />
-          <Link href={`/compare?a=${p.id}`} className="btn-ghost">Сравнить с другой профессией</Link>
-          <Link href={`/professions/switch?to=${p.id}`} className="btn-ghost">Перейти с моей профессии</Link>
+        <div className="flex flex-wrap gap-2">
+          <span className="chip">{t(directionKey(c.direction))}</span>
+          <span className="chip">{t(`cat.readiness.${c.readiness}` as MessageKey)}</span>
         </div>
+        <h1 className="text-2xl font-extrabold sm:text-3xl">{c.titles[lang]}</h1>
+        <p className="text-slate-700 dark:text-slate-300">{c.description}</p>
+        {lang !== "ru" && <p className="text-xs text-slate-500">{t("cat.ruOnly")}</p>}
+        <p className="text-xs text-slate-500">{t("cat.draftNote")}</p>
+        <div className="flex flex-wrap items-center gap-2 pt-1"><ChooseCareer professionId={c.id} /><FavoriteButton id={c.id} /></div>
       </header>
 
-      {/* Почему подходит: только если есть результат. Это ориентир, а не оценка способностей. */}
-      <section className="card space-y-3">
-        <h2 className="font-semibold">Почему эта профессия в подборе</h2>
-        {match ? (
-          <>
-            <p className="text-sm">Совпадение: <b>{match.percent}%</b> (ориентир для размышления, а не оценка способностей и не вероятность успеха).</p>
-            <ul className="list-disc space-y-1 pl-5 text-sm text-slate-600 dark:text-slate-400">
-              {match.reasons.map((r) => <li key={r}>{r}</li>)}
-            </ul>
-          </>
-        ) : (
-          <p className="text-sm text-slate-500">
-            {ctx.matches ? "Для этой профессии совпадение не посчитано." : <>Пройдите <Link href="/test" className="text-indigo-600 underline">тест</Link>, и здесь появится, почему профессия подходит именно вам.</>}
-          </p>
-        )}
+      <IntroChallenge careerId={c.id} question={c.challenge.question} options={c.challenge.options} solved={attempt?.solvedAt != null} />
+
+      <List title={t("cat.tasks")} items={c.tasks} />
+
+      <section className="card space-y-3" aria-labelledby="comp-h">
+        <h2 id="comp-h" className="font-extrabold">{t("cat.competencies")}</h2>
+        <ul className="space-y-2 text-sm">
+          {c.competencies.map((k) => (
+            <li key={k.id} className="flex items-center justify-between gap-3"><span>{k.name}</span><span className="flex items-center gap-2 text-xs font-bold text-slate-500">{t(`cat.lvl.${k.level}` as MessageKey)}<Level level={k.level} /></span></li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="card space-y-3" aria-labelledby="uni-h">
+        <h2 id="uni-h" className="font-extrabold">{t("cat.universal")}</h2>
+        <ul className="grid gap-2 text-sm sm:grid-cols-2">
+          {UNIVERSAL_SKILLS.map((s) => (
+            <li key={s} className="flex items-center justify-between gap-3"><span className={c.topUniversal.includes(s) ? "font-extrabold" : ""}>{t(`us.${s}` as MessageKey)}</span><Level level={c.universal[s]} /></li>
+          ))}
+        </ul>
       </section>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Section title="Основные обязанности" items={p.tasks} />
-        <Section title="Необходимые навыки" items={p.skills} />
-        <Section title="Примеры практических проектов" items={p.projects} />
-        <Section title="Возможные направления обучения" items={p.study} />
+        <List title={t("cat.prereq")} items={[...c.prerequisites.subjects, c.prerequisites.education]} />
+        <List title={t("cat.examples")} items={c.examples} />
+        <List title={t("cat.route")} items={c.route.study} />
+        <List title={t("cat.growth")} items={c.route.growth} />
       </div>
 
-      <section className="card space-y-3">
-        <h2 className="font-semibold">Уровень подготовки и школа</h2>
-        <p className="text-sm">{LEVEL_LABELS[p.level]}. Сложность подготовки: {"●".repeat(difficulty)}{"○".repeat(3 - difficulty)} (1 — проще, 3 — сложнее).</p>
-        <p className="text-sm">Подходящие школьные предметы: {p.subjects.map(subjectAreaName).join("; ")}.</p>
-      </section>
+      <p className="text-xs text-slate-500">{t("cat.holland")}: {c.holland}</p>
 
-      <section className="card space-y-3">
-        <h2 className="font-semibold">Влияние искусственного интеллекта</h2>
-        <p className="text-sm text-slate-600 dark:text-slate-400">{p.aiImpact}</p>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Section title="Что ИИ может автоматизировать" items={p.aiAutomates} />
-          <Section title="Что останется важным для человека" items={p.humanSkills} />
-        </div>
-        <p className="text-xs text-slate-500">Это качественное описание авторов проекта, а не статистика и не прогноз рынка труда.</p>
-      </section>
-
-      <Section title="Возможности карьерного роста" items={p.growth} />
-
-      {sameCategory.length > 0 && (
+      {same.length > 0 && (
         <section className="card">
-          <h2 className="mb-2 font-semibold">Похожие профессии в этом направлении</h2>
           <div className="flex flex-wrap gap-2">
-            {sameCategory.map((x) => (
-              <Link key={x.id} href={`/professions/${x.id}`} className="chip hover:bg-indigo-100 dark:hover:bg-indigo-900">{x.title}</Link>
-            ))}
+            {same.map((x) => <Link key={x.id} href={`/professions/${x.id}`} className="chip hover:bg-indigo-100 dark:hover:bg-indigo-900">{x.titles[lang]}</Link>)}
           </div>
         </section>
       )}

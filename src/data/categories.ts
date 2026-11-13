@@ -3,7 +3,7 @@ import type { DirectionId } from "./directions";
 
 export type CategoryId =
   | "it" | "ai_data" | "cyber" | "engineering" | "medicine" | "business" | "finance" | "design" | "media"
-  | "education" | "law" | "architecture" | "logistics" | "ecology" | "agri" | "production" | "tourism" | "social";
+  | "education" | "law" | "architecture" | "logistics" | "ecology" | "agri" | "production" | "tourism" | "social" | "science";
 
 export const CATEGORIES: { id: CategoryId; name: string }[] = [
   { id: "it", name: "IT и программирование" },
@@ -24,6 +24,7 @@ export const CATEGORIES: { id: CategoryId; name: string }[] = [
   { id: "production", name: "Производство и промышленность" },
   { id: "tourism", name: "Туризм и гостиничный бизнес" },
   { id: "social", name: "Социальная работа и психология" },
+  { id: "science", name: "Наука и исследования" },
 ];
 
 export const categoryName = (id: CategoryId): string => CATEGORIES.find((c) => c.id === id)?.name ?? id;
@@ -49,6 +50,7 @@ export const CATEGORY_DIRECTIONS: Record<CategoryId, Partial<Record<DirectionId,
   production: { engineering: 1 },
   tourism: { business: 1, education: 0.5 },
   social: { education: 1, medicine: 0.5 },
+  science: { it: 0.5, engineering: 0.5, medicine: 0.5 },
 };
 
 // Области школьных предметов. Используются для проверки совпадения с требованиями профессии.

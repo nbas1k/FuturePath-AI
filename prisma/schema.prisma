@@ -31,6 +31,7 @@ model Profile {
   streakDays         Int               @default(0)
   lastActiveDay      String? // YYYY-MM-DD
   assessments      Assessment[]
+  introAttempts    IntroAttempt[]
   skillChecks        SkillCheck[]
   practiceAnswers    PracticeAnswer[]
   lessonReads        LessonRead[]
@@ -281,4 +282,19 @@ model Assessment {
   completedAt DateTime?
 
   @@index([profileId, createdAt])
+}
+// Вводное задание профессии (Этап 4). Результат проверяет сервер; одна запись на профиль и профессию.
+model IntroAttempt {
+  id        String    @id @default(cuid())
+  profileId String
+  profile   Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  careerId  String
+  choice    Int
+  correct   Boolean
+  attempts  Int       @default(1)
+  solvedAt  DateTime? // когда впервые ответили верно
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([profileId, careerId])
 }

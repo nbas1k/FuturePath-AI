@@ -9,6 +9,7 @@ import { HEALTH_SOCIAL } from "./health-social";
 import { BUSINESS_FINANCE_LAW } from "./business-finance-law";
 import { CREATIVE_MEDIA_TOURISM } from "./creative-media-tourism";
 import { EDU_ARCH_LOGISTICS } from "./education-architecture-logistics";
+import { SCIENCE } from "./science";
 import type { Profession } from "./types";
 
 export * from "./types";
@@ -20,6 +21,7 @@ export const PROFESSIONS: Profession[] = [
   ...BUSINESS_FINANCE_LAW,
   ...CREATIVE_MEDIA_TOURISM,
   ...EDU_ARCH_LOGISTICS,
+  ...SCIENCE,
 ];
 
 // Направления профессии: свои веса, а если их нет — веса её категории

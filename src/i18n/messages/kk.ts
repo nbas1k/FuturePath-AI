@@ -1,4 +1,5 @@
 import type { MessageKey } from "./ru";
+import { catalogKk } from "./catalog";
 import { assessmentKk } from "./assessment";
 
 // Қазақша аудармалар. ЕСКЕРТУ: тіл иесі тексеруі қажет (машиналық сапа емес, бірақ нақты тексеру жасалмаған).
@@ -88,5 +89,6 @@ export const kk: Record<MessageKey, string> = {
   "home.rec.progress": "Прогресті қарау",
   "profile.language": "Тіл",
   ...assessmentKk,
+  ...catalogKk,
 
 };

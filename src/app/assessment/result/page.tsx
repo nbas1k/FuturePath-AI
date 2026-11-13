@@ -6,6 +6,7 @@ import { getLatestAssessment } from "@/backend/assessment";
 import { sanitizeAnswers, scoreAssessment, type Match } from "@/assessment/score";
 import { LETTERS, SKILL_DIMS, DEMONSTRABLE } from "@/assessment/items";
 import { professionById } from "@/data/professions";
+import { getCareer } from "@/catalog/build";
 import { parseInterests } from "@/onboarding/schema";
 import { getT } from "@/i18n/server";
 import type { MessageKey } from "@/i18n";
@@ -44,7 +45,7 @@ export default async function ResultPage() {
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-sm font-bold text-slate-500">#{i + 1}</p>
-                  <h2 className="text-xl font-extrabold">{m.title}</h2>
+                  <h2 className="text-xl font-extrabold">{getCareer(m.professionId)?.titles[lang] ?? m.title}</h2>
                 </div>
                 <div className="shrink-0 text-right">
                   <p className="text-2xl font-extrabold text-indigo-700 dark:text-indigo-300">{m.percent}</p>

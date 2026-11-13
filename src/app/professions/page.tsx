@@ -1,51 +1,26 @@
-import { PROFESSIONS } from "@/data/professions";
-import { ProfessionCatalog } from "@/components/ProfessionCatalog";
-import { contextFromResult, loadUserResult } from "@/backend/catalogContext";
 import Link from "next/link";
-import { SectionTools } from "@/components/SectionTools";
+import { ArrowRight } from "lucide-react";
+import { CAREERS } from "@/catalog/build";
+import { CareerCatalog } from "@/components/CareerCatalog";
+import { getT } from "@/i18n/server";
 
-export const dynamic = "force-dynamic";
-export const metadata = { title: "Профессии — FuturePath AI" };
+export const metadata = { title: "FuturePath AI" };
 
 export default async function ProfessionsPage() {
-  const user = await loadUserResult();
-  const ctx = contextFromResult(user);
-  const hasInterests = user.status === "ok" && user.result.hasInterests;
-
+  const { t, lang } = await getT();
+  const items = CAREERS.map((c) => ({ id: c.id, direction: c.direction, titles: c.titles, readiness: c.readiness }));
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="h2 mb-1">Каталог профессий</h1>
-        <p className="text-sm text-slate-500">
-          {PROFESSIONS.length} профессий в 18 направлениях. Описания составлены авторами проекта как ориентир: это не данные о зарплатах и спросе на рынке труда.
-        </p>
-      </div>
-
-      {user.status === "none" && (
-        <p className="rounded-xl bg-indigo-50 p-3 text-sm text-indigo-800 dark:bg-indigo-950 dark:text-indigo-200">
-          Пройдите <Link href="/test" className="underline">тест</Link>, и каталог покажет, какие профессии подходят вам и почему.
-        </p>
-      )}
-      {user.status === "outdated" && (
-        <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-950 dark:text-amber-200">
-          Ваш результат устарел. <Link href="/test" className="underline">Пройдите тест заново</Link>, чтобы видеть совпадения.
-        </p>
-      )}
-      {user.status === "ok" && !user.result.hasInterests && (
-        <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-950 dark:text-amber-200">
-          Ваш результат получен по первой версии теста: интересы по 18 направлениям не учитывались.
-          {" "}<Link href="/test" className="underline">Пройдите обновлённый тест</Link>, чтобы учесть интересы.
-        </p>
-      )}
-
-      <ProfessionCatalog
-        professions={PROFESSIONS}
-        matches={ctx.matches ?? {}}
-        myCategories={ctx.myCategories ?? []}
-        hasInterests={hasInterests}
-      />
-
-      <SectionTools section="professions" title="Инструменты раздела «Профессии»" />
+      <header className="space-y-1">
+        <h1 className="text-2xl font-extrabold sm:text-3xl">{t("cat.title")}</h1>
+        <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">{t("cat.count", { n: CAREERS.length })}</p>
+        <p className="text-xs text-slate-500">{t("cat.draftNote")}</p>
+      </header>
+      <Link href="/assessment" className="card flex min-h-[56px] items-center gap-3 !py-3 font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
+        <span className="flex-1">{t("home.rec.test")}</span><ArrowRight size={18} className="text-slate-400" aria-hidden />
+      </Link>
+      <CareerCatalog careers={items} />
+      {lang !== "ru" && <p className="text-xs text-slate-500">{t("cat.ruOnly")}</p>}
     </div>
   );
 }
