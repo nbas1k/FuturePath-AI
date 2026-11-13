@@ -14,7 +14,7 @@ export function PathMap({ track, t }: { track: TrackView; t: T }) {
       {track.modules.map((m) => (
         <section key={m.id} aria-labelledby={`h-${m.id}`}>
           <header className="rounded-2xl bg-indigo-600 p-4 text-white">
-            <h2 id={`h-${m.id}`} className="text-lg font-extrabold">{m.title}</h2>
+            <h2 id={`h-${m.id}`} className="text-lg font-extrabold !text-white">{m.title}</h2>
             {m.summary && <p className="text-sm text-indigo-50">{m.summary}</p>}
             {!m.expertReviewed && <p className="mt-1 text-xs text-indigo-100">{t("learn.draft")}</p>}
           </header>

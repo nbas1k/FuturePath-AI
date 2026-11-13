@@ -33,7 +33,7 @@ export default async function Home() {
   const pct = Math.round((xpToday / goal) * 100);
 
   const recs = [
-    !data.hasProfile || data.user.status !== "ok" ? { href: "/assessment", label: t("home.rec.test"), icon: Compass } : null,
+    !data.facts.hasResult ? { href: "/assessment", label: t("home.rec.test"), icon: Compass } : null,
     { href: "/professions", label: t("home.rec.catalog"), icon: Compass },
     { href: "/learn", label: t("home.rec.learn"), icon: GraduationCap },
     { href: "/path", label: t("home.rec.progress"), icon: TrendingUp },

@@ -50,8 +50,9 @@ export async function loadJourney(): Promise<JourneyData> {
     round2Done = track.round2 !== null;
   }
 
+  const assessmentDone = (await prisma.assessment.count({ where: { profileId: profile.id, status: "completed" } })) > 0;
   const facts: JourneyFacts = {
-    hasResult: user.status === "ok",
+    hasResult: user.status === "ok" || assessmentDone,
     selectedProfession: selected?.id ?? null,
     skillsTotal: selected?.skills.length ?? 0,
     skillsRated: selected ? selected.skills.filter((s) => ratings[s] !== undefined).length : 0,

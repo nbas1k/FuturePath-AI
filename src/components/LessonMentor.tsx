@@ -11,6 +11,11 @@ const MODES: MentorMode[] = ["explain_simple", "example", "hint", "ask_question"
 type Msg = { role: string; text: string };
 
 // Панель ИИ-наставника. Если ИИ не подключён, честно говорим об этом и показываем рекомендации тренировки (они считаются без ИИ).
+// Ответы ИИ часто содержат **жирный** текст: показываем его как выделение, а не со звёздочками.
+function Rich({ text }: { text: string }) {
+  return <>{text.split(/(\*\*[^*]+\*\*)/g).map((p, i) => (p.startsWith("**") && p.endsWith("**") ? <strong key={i}>{p.slice(2, -2)}</strong> : <span key={i}>{p.replace(/^#+\s*/gm, "")}</span>))}</>;
+}
+
 export function LessonMentor({ lessonId, exerciseId }: { lessonId: string; exerciseId?: string }) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
@@ -57,7 +62,7 @@ export function LessonMentor({ lessonId, exerciseId }: { lessonId: string; exerc
                   {MODES.map((m) => <button key={m} type="button" disabled={busy} className="chip min-h-[44px] !px-3" onClick={() => ask(m)}>{t(`mentor.mode.${m}` as MessageKey)}</button>)}
                 </div>
                 <ul className="space-y-2" aria-live="polite">
-                  {msgs.map((m, i) => <li key={i} className={`rounded-2xl p-3 text-sm ${m.role === "user" ? "ml-8 bg-indigo-50 dark:bg-indigo-950" : "mr-8 bg-slate-100 dark:bg-slate-800"}`}>{m.text}</li>)}
+                  {msgs.map((m, i) => <li key={i} className={`rounded-2xl p-3 text-sm ${m.role === "user" ? "ml-8 bg-indigo-50 dark:bg-indigo-950" : "mr-8 bg-slate-100 dark:bg-slate-800"}`}><Rich text={m.text} /></li>)}
                   {busy && <li className="text-sm text-slate-500">{t("mentor.thinking")}</li>}
                 </ul>
                 <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); if (input.trim()) ask("dialog", input.trim()); }}>
