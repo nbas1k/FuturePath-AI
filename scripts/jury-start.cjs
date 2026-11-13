@@ -27,8 +27,8 @@ function neonUrl(config, key, direct) {
 
 function loadConfig() {
   if (!existsSync(configPath)) {
-    copyFileSync(".env.example", configPath, constants.COPYFILE_EXCL);
-    throw new Error(`Created ${configPath}. Fill it with the private jury credentials and run again.`);
+    copyFileSync(existsSync("jury-config.env") ? "jury-config.env" : ".env.example", configPath, constants.COPYFILE_EXCL);
+    if (!existsSync("jury-config.env")) throw new Error(`Created ${configPath}. Fill it with the jury credentials and run again.`);
   }
   const config = parseEnv(readFileSync(configPath, "utf8"));
   const pooled = neonUrl(config, "DATABASE_URL", false);
