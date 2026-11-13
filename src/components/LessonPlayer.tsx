@@ -6,6 +6,7 @@ import { Check, X, ArrowRight } from "lucide-react";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n";
 import type { PlayLesson } from "@/backend/learn";
+import { LessonMentor } from "./LessonMentor";
 
 type Feedback = { correct: boolean; score: number; explanation: string; reveal: any; optionFeedback?: string; unverified: boolean };
 type Summary = { score: number; passed: boolean; xp: number; mistakes: { exerciseId: string; prompt: string; explanation: string }[]; nextLessonId: string | null; unverifiedCount: number };
@@ -239,6 +240,7 @@ function LessonPlayerInner({ lesson, attemptId, answered, trackHref }: { lesson:
             <p className="text-sm"><span className="font-bold">{t("lp.why")}: </span>{feedback.explanation}</p>
           </div>
         )}
+        <LessonMentor lessonId={lesson.id} exerciseId={ex.id} />
         {feedback ? <button className="btn-primary w-full !text-base" disabled={busy} onClick={next}>{t("lp.continue")}</button>
           : <button className="btn-primary w-full !text-base" disabled={busy || answer === null} onClick={check}>{t("lp.check")}</button>}
       </footer>

@@ -12,7 +12,7 @@ const SECTIONS: { href: string; key: MessageKey; icon: typeof Home; match: strin
   { href: "/", key: "nav.home", icon: Home, match: ["/", "/features"] },
   { href: "/professions", key: "nav.professions", icon: Compass, match: ["/professions", "/compare", "/test", "/result", "/assessment"] },
   { href: "/learn", key: "nav.learn", icon: GraduationCap, match: ["/learn", "/plan", "/ai"] },
-  { href: "/path", key: "nav.progress", icon: TrendingUp, match: ["/path"] },
+  { href: "/progress", key: "nav.progress", icon: TrendingUp, match: ["/progress", "/path"] },
   { href: "/profile", key: "nav.profile", icon: User, match: ["/profile", "/cabinet"] },
 ];
 

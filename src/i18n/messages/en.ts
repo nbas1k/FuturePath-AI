@@ -1,6 +1,9 @@
 import type { MessageKey } from "./ru";
 import { catalogEn } from "./catalog";
 import { learnEn } from "./learn";
+import { mentorEn } from "./mentor";
+import { simEn } from "./sim";
+import { progressEn } from "./progress";
 import { assessmentEn } from "./assessment";
 
 export const en: Record<MessageKey, string> = {
@@ -91,5 +94,8 @@ export const en: Record<MessageKey, string> = {
   ...assessmentEn,
   ...catalogEn,
   ...learnEn,
+  ...mentorEn,
+  ...simEn,
+  ...progressEn,
 
 };

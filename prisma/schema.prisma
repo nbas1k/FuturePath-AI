@@ -35,6 +35,8 @@ model Profile {
   lessonAttempts   LessonAttempt[]
   competencyProgress CompetencyProgress[]
   xpTransactions   XpTransaction[]
+  aiSessions       AiSession[]
+  simRuns2         SimulationRun[]
   skillChecks        SkillCheck[]
   practiceAnswers    PracticeAnswer[]
   lessonReads        LessonRead[]
@@ -409,4 +411,42 @@ model XpTransaction {
   createdAt  DateTime @default(now())
 
   @@unique([profileId, sourceType, sourceId])
+}
+// ИИ-сессии (ai_sessions): учебный диалог с наставником или сценарием. Хранятся только тексты реплик, без личных данных.
+model AiSession {
+  id        String   @id @default(cuid())
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  kind      String   // mentor | simulation | voice
+  contextId String   // урок, симуляция или задание голосовой практики
+  messages  Json     @default("[]") // [{ role, text, at }]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([profileId, kind, contextId])
+}
+
+// Прохождение симуляции «Один день в профессии». state — ход (решения, вопросы), report — итог по критериям. Считает сервер.
+model SimulationRun {
+  id          String    @id @default(cuid())
+  profileId   String
+  profile     Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  simId       String
+  status      String    @default("in_progress") // in_progress | completed
+  state       Json      @default("{}")
+  score       Float?
+  report      Json?
+  xpAwarded   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  @@index([profileId, simId])
+}
+// Правки каталога профессий из админки: статус публикации и переводы названий. Каталог в коде остаётся источником по умолчанию.
+model CareerOverride {
+  careerId  String   @id
+  status    String   @default("published") // draft | review | published
+  titleKk   String?
+  titleEn   String?
+  updatedAt DateTime @updatedAt
 }

@@ -3,7 +3,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { ensureContent } from "./learnContent";
 import { PASS_SCORE, competencyScores, gradeExercise, lessonScore, lessonStates, lText, pick, xpFor, type AttemptInfo, type LessonState } from "@/learn/engine";
-import { dayKey, nextStreak } from "@/learn/streak";
+import { awardXp } from "./xp";
 import type { ExerciseType, Lang, LText } from "@/learn/types";
 
 const L = (v: unknown): LText => v as LText;
@@ -145,22 +145,12 @@ export async function completeAttempt(profileId: string, attemptId: string, lang
   if (attempt.status === "in_progress") {
     await prisma.$transaction(async (tx) => {
       await tx.lessonAttempt.update({ where: { id: attemptId }, data: { status: "completed", score, completedAt: new Date() } });
-      const amount = xpFor(lesson.maxXp, score);
+      // За один урок XP начисляется один раз (уникальный источник), повторное прохождение XP не даёт.
+      const amount = await awardXp(tx, profileId, xpFor(lesson.maxXp, score), "lesson", lesson.id);
       if (amount > 0) {
-        try {
-          // Уникальность (профиль, lesson, урок): за один урок XP начисляется один раз, повторное прохождение XP не даёт.
-          await tx.xpTransaction.create({ data: { profileId, amount, sourceType: "lesson", sourceId: lesson.id } });
-          const p = await tx.profile.findUniqueOrThrow({ where: { id: profileId }, select: { lastActiveDay: true, streakDays: true } });
-          const today = dayKey(new Date());
-          await tx.profile.update({ where: { id: profileId }, data: { xp: { increment: amount }, lastActiveDay: today, streakDays: nextStreak(p.lastActiveDay, today, p.streakDays) } });
-          await tx.lessonAttempt.update({ where: { id: attemptId }, data: { xpAwarded: amount } });
-          xp = amount;
-        } catch (e) {
-          if (!(e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002")) throw e;
-          // уже начисляли за этот урок
-        }
-      }
-    });
+        await tx.lessonAttempt.update({ where: { id: attemptId }, data: { xpAwarded: amount } });
+        xp = amount;
+      }    });
     await recomputeCompetencies(profileId);
   } else {
     xp = attempt.xpAwarded;

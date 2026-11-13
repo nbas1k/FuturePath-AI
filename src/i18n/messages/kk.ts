@@ -1,6 +1,9 @@
 import type { MessageKey } from "./ru";
 import { catalogKk } from "./catalog";
 import { learnKk } from "./learn";
+import { mentorKk } from "./mentor";
+import { simKk } from "./sim";
+import { progressKk } from "./progress";
 import { assessmentKk } from "./assessment";
 
 // Қазақша аудармалар. ЕСКЕРТУ: тіл иесі тексеруі қажет (машиналық сапа емес, бірақ нақты тексеру жасалмаған).
@@ -92,5 +95,8 @@ export const kk: Record<MessageKey, string> = {
   ...assessmentKk,
   ...catalogKk,
   ...learnKk,
+  ...mentorKk,
+  ...simKk,
+  ...progressKk,
 
 };

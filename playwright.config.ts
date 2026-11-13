@@ -5,6 +5,7 @@ export default defineConfig({
   testDir: "./e2e",
   timeout: 60_000,
   workers: 1,
+  retries: 1, // первый запрос к dev-серверу после старта бывает медленным (компиляция)
   reporter: [["list"]],
   use: { baseURL: "http://localhost:3001", trace: "retain-on-failure" },
   webServer: { command: "npm run dev", url: "http://localhost:3001", reuseExistingServer: true, timeout: 120_000 },

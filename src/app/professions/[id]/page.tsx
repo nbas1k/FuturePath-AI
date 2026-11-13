@@ -9,6 +9,8 @@ import type { MessageKey } from "@/i18n";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { ChooseCareer } from "@/components/ChooseCareer";
 import { IntroChallenge } from "@/components/IntroChallenge";
+import { simsForCareer } from "@/sim/defs";
+import { careerOverrides } from "@/backend/careerOverrides";
 
 export function generateStaticParams() {
   return CAREERS.map((c) => ({ id: c.id }));
@@ -33,6 +35,8 @@ export default async function CareerPage({ params }: { params: Promise<{ id: str
   const { id } = await params;
   const c = getCareer(id);
   if (!c) notFound();
+  const ov = (await careerOverrides()).get(c.id);
+  if (ov && ov.status !== "published") notFound();
   const { t, lang } = await getT();
   const profile = await getProfile();
   const attempt = profile ? await prisma.introAttempt.findUnique({ where: { profileId_careerId: { profileId: profile.id, careerId: c.id } } }) : null;
@@ -47,7 +51,7 @@ export default async function CareerPage({ params }: { params: Promise<{ id: str
           <span className="chip">{t(directionKey(c.direction))}</span>
           <span className="chip">{t(`cat.readiness.${c.readiness}` as MessageKey)}</span>
         </div>
-        <h1 className="text-2xl font-extrabold sm:text-3xl">{c.titles[lang]}</h1>
+        <h1 className="text-2xl font-extrabold sm:text-3xl">{(lang === "kk" && ov?.titleKk) || (lang === "en" && ov?.titleEn) || c.titles[lang]}</h1>
         <p className="text-slate-700 dark:text-slate-300">{c.description}</p>
         {lang !== "ru" && <p className="text-xs text-slate-500">{t("cat.ruOnly")}</p>}
         <p className="text-xs text-slate-500">{t("cat.draftNote")}</p>
@@ -55,6 +59,8 @@ export default async function CareerPage({ params }: { params: Promise<{ id: str
       </header>
 
       <IntroChallenge careerId={c.id} question={c.challenge.question} options={c.challenge.options} solved={attempt?.solvedAt != null} />
+
+      {(() => { const s = simsForCareer(c.id); return [...s.steps, ...s.code].map((x) => <Link key={x.id} href={`/learn/sim/${encodeURIComponent(x.id)}`} className="card block font-extrabold hover:bg-slate-50 dark:hover:bg-slate-800">{t("sim.title")}: {x.title}</Link>); })()}
 
       <List title={t("cat.tasks")} items={c.tasks} />
 
