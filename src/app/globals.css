@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Дизайн-система FuturePath AI: «линейка навыков».
+   Холодная бумага и чернила, сигнальный сине-зелёный, жёлтый маркер для измеренного улучшения. */
+
+@layer base {
+  html { scroll-behavior: smooth; }
+  body {
+    @apply bg-slate-50 font-sans text-slate-800 antialiased dark:bg-slate-950 dark:text-slate-200;
+    font-feature-settings: "tnum" 1, "cv11" 1;
+  }
+  h1, h2, h3, h4 { @apply font-display tracking-display text-slate-900 dark:text-slate-50; }
+  /* Видимый фокус с клавиатуры для всех интерактивных элементов */
+  :focus-visible { outline: 2px solid theme("colors.indigo.500"); outline-offset: 2px; border-radius: 6px; }
+  ::selection { background: theme("colors.marker.DEFAULT"); color: #1b1500; }
+}
+
+@layer components {
+  /* Карточка: плоская, с тонкой линией. Иерархию задают отступы и линии, а не тени. */
+  .card { @apply rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900; }
+  .btn { @apply inline-flex items-center justify-center rounded-lg px-5 py-2.5 text-sm font-semibold transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-45; }
+  .btn-primary { @apply btn bg-slate-900 text-white hover:bg-indigo-600 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-indigo-300; }
+  .btn-ghost { @apply btn border border-slate-300 text-slate-800 hover:border-slate-900 hover:bg-white dark:border-slate-700 dark:text-slate-200 dark:hover:border-slate-300 dark:hover:bg-slate-900; }
+  .chip { @apply inline-block rounded-md bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700 dark:bg-indigo-950 dark:text-indigo-200; }
+  .h2 { @apply font-display text-2xl font-semibold tracking-display sm:text-3xl; }
+  .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .rule { @apply border-t border-slate-200 dark:border-slate-800; }
+
+  /* Линейка: основная форма страницы. Деления на шкале, маркер «до» и «после». */
+  .ruler-track { background-image: repeating-linear-gradient(90deg, theme("colors.slate.300") 0 1px, transparent 1px 8.3333%); }
+  .dark .ruler-track { background-image: repeating-linear-gradient(90deg, theme("colors.slate.700") 0 1px, transparent 1px 8.3333%); }
+  /* Графическая бумага для первого экрана */
+  .paper-grid {
+    background-image:
+      linear-gradient(to right, theme("colors.slate.200") 1px, transparent 1px),
+      linear-gradient(to bottom, theme("colors.slate.200") 1px, transparent 1px);
+    background-size: 32px 32px;
+    mask-image: linear-gradient(to bottom, #000 0%, transparent 85%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 85%);
+    opacity: .55;
+  }
+  .dark .paper-grid {
+    background-image:
+      linear-gradient(to right, theme("colors.slate.800") 1px, transparent 1px),
+      linear-gradient(to bottom, theme("colors.slate.800") 1px, transparent 1px);
+    opacity: .7;
+  }
+  /* Единственное заметное движение на странице: маркер проходит по линейке один раз при загрузке */
+  .ruler-sweep { animation: sweep 1.1s cubic-bezier(.2, .7, .2, 1) .15s both; transform-origin: left center; }
+  .fade-in { animation: none; }
+}
+
+@keyframes sweep { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .ruler-sweep { animation: none; }
+  html { scroll-behavior: auto; }
+  * { transition-duration: 0.01ms !important; }
+}

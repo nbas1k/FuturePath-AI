@@ -1,0 +1,255 @@
+// База данных: PostgreSQL (Neon). Для локальной разработки и миграций используется прямое подключение.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_DATABASE_URL")
+}
+
+// Демо-профиль: без пароля, привязан к cookie браузера
+model Profile {
+  id        String         @id @default(cuid())
+  name      String         @default("Гость")
+  createdAt DateTime       @default(now())
+  results   TestResult[]
+  progress  PlanProgress[] // старая таблица (день плана), больше не используется
+  tasks     TaskProgress[]
+  aiRecords AiRecord[]
+  selectedProfession String? // выбранная профессия (id из каталога), null — ещё не выбрана
+  skillChecks SkillCheck[]
+  practiceAnswers PracticeAnswer[]
+  lessonReads LessonRead[]
+  challengeAnswers ChallengeAnswer[]
+  challengeAiHelps ChallengeAiHelp[]
+  simRuns SimRun[]
+  mentorMessages MentorMessage[]
+  interviewRuns InterviewRun[]
+  softRuns SoftRun[]
+  portfolioItems PortfolioItem[]
+  cycleRuns CycleRun[]
+}
+
+// Human + AI Challenge: ответы пользователя. mode "solo" — самостоятельно, "ai" — с подсказками ИИ.
+model ChallengeAnswer {
+  id           String   @id @default(cuid())
+  profileId    String
+  profile      Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  professionId String
+  mode         String
+  taskId       String
+  answer       Int
+  correct      Boolean
+  createdAt    DateTime @default(now())
+
+  @@unique([profileId, professionId, mode, taskId])
+}
+
+// Подсказка ИИ к заданию режима «с ИИ». Сохраняется, чтобы её нельзя было перегенерировать до удачного ответа.
+// correct — совпал ли ответ ИИ с проверенным правильным ответом (ИИ может ошибаться).
+model ChallengeAiHelp {
+  id           String   @id @default(cuid())
+  profileId    String
+  profile      Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  professionId String
+  taskId       String
+  choice       Int
+  why          String
+  correct      Boolean
+  createdAt    DateTime @default(now())
+
+  @@unique([profileId, professionId, taskId])
+}
+
+// Прохождение симулятора «один день в профессии». choices — JSON-список номеров выбранных вариантов по ситуациям.
+model SimRun {
+  id           String   @id @default(cuid())
+  profileId    String
+  profile      Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  professionId String
+  choices      String   @default("[]")
+  finished     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// Ответ на задание учебного маршрута. round 1 — первая проверка (диагностика), round 2 — повторная после курса.
+model PracticeAnswer {
+  id           String   @id @default(cuid())
+  profileId    String
+  profile      Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  professionId String
+  round        Int
+  taskId       String
+  answer       Int
+  correct      Boolean
+  createdAt    DateTime @default(now())
+
+  @@unique([profileId, professionId, round, taskId])
+}
+
+// Урок мини-курса отмечен как прочитанный
+model LessonRead {
+  id           String   @id @default(cuid())
+  profileId    String
+  profile      Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  professionId String
+  lessonId     String
+  createdAt    DateTime @default(now())
+
+  @@unique([profileId, professionId, lessonId])
+}
+
+// Самооценка навыка пользователя: 0 — пока не умею, 1 — немного, 2 — уверенно.
+// ВАЖНО: это САМООЦЕНКА, а не проверенный уровень навыка.
+model SkillCheck {
+  id           String   @id @default(cuid())
+  profileId    String
+  profile      Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  professionId String
+  skill        String
+  rating       Int
+  updatedAt    DateTime @updatedAt
+
+  @@unique([profileId, professionId, skill])
+}
+
+// Результат работы AI-функций (анализ, дорожная карта).
+// kind — "analysis" или "roadmap"; basedOn — ключ плана, для которого сделан ответ;
+// payload — JSON, уже прошедший проверку структуры; source — "ai" или "rules" (резерв без ИИ).
+model AiRecord {
+  id        String   @id @default(cuid())
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  kind      String
+  basedOn   String
+  source    String
+  payload   String
+  createdAt DateTime @default(now())
+}
+
+// Результат теста: ответы хранятся как JSON-строка {questionId: optionId}
+model TestResult {
+  id        String   @id @default(cuid())
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  answers   String
+  version   Int      @default(1) // версия теста: 1 — 18 вопросов, 2 — 24 вопроса (с интересами)
+  createdAt DateTime @default(now())
+}
+
+// Отметка выполненного задания плана.
+// planKey — версия плана + направления (например "v1:it+design+business"),
+// taskId — постоянный id задания внутри плана (например "it-3").
+model TaskProgress {
+  id        String   @id @default(cuid())
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  planKey   String
+  taskId    String
+  done      Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+
+  @@unique([profileId, planKey, taskId])
+}
+
+// СТАРАЯ таблица: отметки по номеру дня. Сохранена, чтобы не удалять данные; код её не использует.
+model PlanProgress {
+  id        String  @id @default(cuid())
+  profileId String
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  day       Int
+  done      Boolean @default(true)
+
+  @@unique([profileId, day])
+}
+
+// Диалог с AI Mentor: хранится только успешный обмен (вопрос пользователя и настоящий ответ ИИ).
+model MentorMessage {
+  id           String   @id @default(cuid())
+  profileId    String
+  profile      Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  professionId String
+  role         String // "user" | "assistant" | "rule" (правило безопасности, не ИИ)
+  content      String
+  createdAt    DateTime @default(now())
+}
+
+// Пробное собеседование. answers — JSON-список ответов по порядку вопросов; evaluation — разбор ИИ (JSON), пока null — не оценено.
+model InterviewRun {
+  id           String   @id @default(cuid())
+  profileId    String
+  profile      Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  professionId String
+  answers      String   @default("[]")
+  evaluation   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// Soft Skills Lab: одно прохождение. choices — JSON-список {id ситуации, номер варианта} в порядке прохождения.
+model SoftRun {
+  id        String   @id @default(cuid())
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  choices   String   @default("[]")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Portfolio Builder: проекты, которые человек добавил сам. skills — JSON-список названий навыков.
+model PortfolioItem {
+  id          String   @id @default(cuid())
+  profileId   String
+  profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  title       String
+  description String
+  skills      String   @default("[]")
+  link        String?
+  createdAt   DateTime @default(now())
+}
+
+// Единый цикл обучения: один проход по одному навыку профессии.
+model CycleRun {
+  id           String   @id @default(cuid())
+  profileId    String
+  profile      Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  professionId String
+  skill        String
+  futureSeen   Boolean  @default(false)
+  aiSkipped    Boolean  @default(false)
+  aiFailures   Int      @default(0)
+  aiReflection String?
+  createdAt    DateTime @default(now())
+  answers      CycleAnswer[]
+  hints        CycleAiHelp[]
+}
+
+// phase: diag | practice | ai | retest
+model CycleAnswer {
+  id        String   @id @default(cuid())
+  runId     String
+  run       CycleRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  phase     String
+  taskId    String
+  answer    Int
+  correct   Boolean
+  createdAt DateTime @default(now())
+
+  @@unique([runId, phase, taskId])
+}
+
+// Подсказка ИИ к заданию шага «Человек + ИИ». Хранится, чтобы её нельзя было перегенерировать до удачной.
+model CycleAiHelp {
+  id      String   @id @default(cuid())
+  runId   String
+  run     CycleRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  taskId  String
+  choice  Int
+  why     String
+  correct Boolean
+
+  @@unique([runId, taskId])
+}

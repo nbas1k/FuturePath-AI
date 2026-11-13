@@ -1,0 +1,2 @@
+file 'C:/Users/БАЙСЕИТ/Desktop/FuturePath AI/docs/demo/work/fin_title.mp4'
+file 'C:/Users/БАЙСЕИТ/Desktop/FuturePath AI/docs/demo/work/fin_new.mp4'
