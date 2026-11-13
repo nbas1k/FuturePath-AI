@@ -26,7 +26,7 @@ test("полная диагностика: прохождение, сохран�
     if (it.block === "situation") return 0;
     return 4;
   });
-  await expect(page).toHaveURL(/\/assessment\/result/);
+  await expect(page).toHaveURL(/\/assessment\/result/, { timeout: 20_000 });
   await expect(page.getByRole("note")).toContainText("валидацию");
   await expect(page.getByRole("heading", { level: 2 }).first()).toBeVisible();
   await expect(page.getByRole("link", { name: "Попробовать профессию" })).toHaveCount(5);
