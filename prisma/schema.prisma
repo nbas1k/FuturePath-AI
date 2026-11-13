@@ -32,6 +32,9 @@ model Profile {
   lastActiveDay      String? // YYYY-MM-DD
   assessments      Assessment[]
   introAttempts    IntroAttempt[]
+  lessonAttempts   LessonAttempt[]
+  competencyProgress CompetencyProgress[]
+  xpTransactions   XpTransaction[]
   skillChecks        SkillCheck[]
   practiceAnswers    PracticeAnswer[]
   lessonReads        LessonRead[]
@@ -297,4 +300,113 @@ model IntroAttempt {
   updatedAt DateTime  @updatedAt
 
   @@unique([profileId, careerId])
+}
+// ===== Движок уроков (Этап 5). Контент хранится в БД (его правит админка), начальное наполнение — из src/content через syncContent(). =====
+// Тексты — Json вида { ru, en?, kk? }; для недостающих языков явный fallback на ru.
+model LearnModule {
+  id             String   @id            // например "career:doctor/m1"
+  trackId        String                  // "career:<id профессии>" или "skill:<id навыка>"
+  order          Int
+  title          Json
+  summary        Json?
+  status         String   @default("draft") // draft | review | published
+  expertReviewed Boolean  @default(false)   // проверено ли экспертом; ИИ-материалы по умолчанию нет
+  source         String   @default("seed")  // seed — обновляется из src/content; admin — правилась в админке, sync её не трогает
+  lessons        Lesson[]
+
+  @@index([trackId, order])
+}
+
+model Lesson {
+  id            String        @id         // "career:doctor/m1/l1"
+  moduleId      String
+  module        LearnModule   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  order         Int
+  title         Json
+  minutes       Int           @default(5)
+  objectives    Json          @default("[]")
+  theory        Json          @default("[]") // [{ kind: "explain" | "example", text }]
+  competencies  Json          @default("[]") // id компетенций, которые развивает урок
+  maxXp         Int           @default(20)
+  status        String        @default("draft")
+  source        String        @default("seed")
+  exercises     Exercise[]
+  attempts      LessonAttempt[]
+
+  @@index([moduleId, order])
+}
+
+model Exercise {
+  id            String   @id            // "career:doctor/m1/l1/e1"
+  lessonId      String
+  lesson        Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  order         Int
+  phase         String   @default("check") // first | harder | apply | check
+  type          String                     // choice | multi | match | order | fill | text | case | project
+  prompt        Json
+  data          Json     @default("{}")    // то, что видит ученик (варианты, пары и т.д.)
+  answerKey     Json                       // ТОЛЬКО сервер: правильные ответы и критерии
+  explanation   Json
+  competencies  Json     @default("[]")    // [{ id, weight }]
+  verified      Boolean  @default(true)    // false — результат не проверяется автоматически и не даёт баллов компетенции
+  source        String   @default("seed")
+  answers       ExerciseAnswer[]
+
+  @@index([lessonId, order])
+}
+
+model LessonAttempt {
+  id          String    @id @default(cuid())
+  profileId   String
+  profile     Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  lessonId    String
+  lesson      Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  status      String    @default("in_progress") // in_progress | completed
+  score       Float?                             // 0..1, считает сервер
+  xpAwarded   Int       @default(0)
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+  answers     ExerciseAnswer[]
+
+  @@index([profileId, lessonId])
+}
+
+model ExerciseAnswer {
+  id         String        @id @default(cuid())
+  attemptId  String
+  attempt    LessonAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  exerciseId String
+  exercise   Exercise      @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  answer     Json
+  correct    Boolean
+  score      Float                                  // 0..1
+  createdAt  DateTime      @default(now())
+
+  @@unique([attemptId, exerciseId])
+}
+
+// Освоение компетенции: среднее по лучшим результатам проверенных заданий. Не равно XP.
+model CompetencyProgress {
+  id           String   @id @default(cuid())
+  profileId    String
+  profile      Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  competencyId String
+  score        Float    @default(0)  // 0..1
+  evidence     Int      @default(0)  // сколько разных заданий учтено
+  updatedAt    DateTime @updatedAt
+
+  @@unique([profileId, competencyId])
+}
+
+// XP. Уникальность (профиль, тип, источник) физически не даёт начислить дважды за один и тот же источник.
+model XpTransaction {
+  id         String   @id @default(cuid())
+  profileId  String
+  profile    Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  amount     Int
+  sourceType String   // lesson | simulation | project | ...
+  sourceId   String
+  createdAt  DateTime @default(now())
+
+  @@unique([profileId, sourceType, sourceId])
 }

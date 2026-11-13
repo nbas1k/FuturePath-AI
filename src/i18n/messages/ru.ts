@@ -1,4 +1,5 @@
 import { catalogRu } from "./catalog";
+import { learnRu } from "./learn";
 import { assessmentRu } from "./assessment";
 // Русский — язык-источник. Все ключи интерфейса нового UI живут здесь.
 export const ru = {
@@ -88,6 +89,7 @@ export const ru = {
   "profile.language": "Язык",
   ...assessmentRu,
   ...catalogRu,
+  ...learnRu,
 } as const;
 
 export type MessageKey = keyof typeof ru;

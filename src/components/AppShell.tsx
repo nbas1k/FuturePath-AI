@@ -17,7 +17,7 @@ const SECTIONS: { href: string; key: MessageKey; icon: typeof Home; match: strin
 ];
 
 // Экраны без навигации: на них пользователь выполняет одну задачу.
-const FULLSCREEN = ["/onboarding"];
+const FULLSCREEN = ["/onboarding", "/learn/lesson"];
 
 function isActive(path: string, match: string[]) {
   return match.some((m) => (m === "/" ? path === "/" : path === m || path.startsWith(m + "/")));

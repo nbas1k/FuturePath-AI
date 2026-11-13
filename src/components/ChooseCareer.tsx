@@ -16,7 +16,7 @@ export function ChooseCareer({ professionId }: { professionId: string }) {
     try {
       const res = await fetch("/api/journey/select", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ professionId }) });
       if (!res.ok) throw new Error("select");
-      router.push("/learn?tab=cycle");
+      router.push("/learn");
     } catch {
       setError(true);
       setBusy(false);
