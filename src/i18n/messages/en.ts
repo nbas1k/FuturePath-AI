@@ -4,6 +4,7 @@ import { learnEn } from "./learn";
 import { mentorEn } from "./mentor";
 import { simEn } from "./sim";
 import { progressEn } from "./progress";
+import { accountEn } from "./account";
 import { assessmentEn } from "./assessment";
 
 export const en: Record<MessageKey, string> = {
@@ -97,5 +98,6 @@ export const en: Record<MessageKey, string> = {
   ...mentorEn,
   ...simEn,
   ...progressEn,
+  ...accountEn,
 
 };

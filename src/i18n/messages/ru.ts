@@ -3,6 +3,7 @@ import { learnRu } from "./learn";
 import { mentorRu } from "./mentor";
 import { simRu } from "./sim";
 import { progressRu } from "./progress";
+import { accountRu } from "./account";
 import { assessmentRu } from "./assessment";
 // Русский — язык-источник. Все ключи интерфейса нового UI живут здесь.
 export const ru = {
@@ -96,6 +97,7 @@ export const ru = {
   ...mentorRu,
   ...simRu,
   ...progressRu,
+  ...accountRu,
 } as const;
 
 export type MessageKey = keyof typeof ru;

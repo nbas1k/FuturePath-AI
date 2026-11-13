@@ -5,6 +5,7 @@ const adminSecret = () => (readFileSync(".env", "utf8").match(/^ADMIN_SECRET="?(
 
 test("симуляция (бизнес) по API: шаги, отчёт, XP один раз; ответы не утекают на страницу", async ({ page }) => {
   const html = await page.goto("/learn/sim/sim:doctor-day").then((r) => r!.text());
+  await page.waitForLoadState("networkidle"); // страница сама создаёт профиль и прохождение; ждём, чтобы cookie не гонялись с тестом
   expect(html).not.toContain("Около пяти дней"); // ответы «пациента» приходят только после выбора
   expect(html).not.toContain('"credit"');
   const run = async (body: object) => (await page.request.post("/api/sim/run", { data: body }));

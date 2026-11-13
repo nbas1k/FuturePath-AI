@@ -36,6 +36,8 @@ model Profile {
   competencyProgress CompetencyProgress[]
   xpTransactions   XpTransaction[]
   aiSessions       AiSession[]
+  userId           String?  @unique
+  user             User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   simRuns2         SimulationRun[]
   skillChecks        SkillCheck[]
   practiceAnswers    PracticeAnswer[]
@@ -449,4 +451,24 @@ model CareerOverride {
   titleKk   String?
   titleEn   String?
   updatedAt DateTime @updatedAt
+}
+// Аккаунт (необязательный): профиль можно вести анонимно, а регистрация привязывает его к email и сохраняет прогресс.
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  createdAt    DateTime  @default(now())
+  profile      Profile?
+  sessions     AuthSession[]
+}
+
+// Сессия входа. В БД хранится только хеш токена; сам токен лежит в httpOnly cookie.
+model AuthSession {
+  id        String   @id          // sha256(token)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }

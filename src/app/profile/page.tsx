@@ -37,6 +37,7 @@ export default async function ProfilePage() {
       <div>
         <h1 className="h2 mb-1">Профиль</h1>
         <p className="text-sm text-slate-500">Здесь ваш прогресс и настройки. Всё, что вы отметили, сохраняется.</p>
+        <Link href="/account" className="mt-2 inline-block text-sm font-bold text-indigo-700 underline dark:text-indigo-300">Аккаунт и вход</Link>
       </div>
 
       <CareerMap />

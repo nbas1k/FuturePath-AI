@@ -1,9 +1,13 @@
 import { cookies, headers } from "next/headers";
 import { prisma } from "./db";
 import { PROFILE_COOKIE, profileCookieOptions } from "./cookies";
+import { currentUser } from "./session";
 
 // Текущий профиль из cookie или null. Ничего не создаёт — можно вызывать при обычном чтении.
 export async function getProfile() {
+  // Вошедший пользователь: профиль берётся из аккаунта, анонимная cookie игнорируется
+  const user = await currentUser();
+  if (user) return user.profile;
   const id = (await cookies()).get(PROFILE_COOKIE)?.value;
   if (!id) return null;
   return prisma.profile.findUnique({ where: { id } });
@@ -11,6 +15,8 @@ export async function getProfile() {
 
 // Создаёт профиль и cookie. Вызывать ТОЛЬКО когда профиль действительно нужен (сохранение результата).
 export async function createProfile() {
+  const user = await currentUser();
+  if (user) return user.profile ?? prisma.profile.create({ data: { userId: user.id } });
   const profile = await prisma.profile.create({ data: {} });
   (await cookies()).set(PROFILE_COOKIE, profile.id, profileCookieOptions());
   return profile;
