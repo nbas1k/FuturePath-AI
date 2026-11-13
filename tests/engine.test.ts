@@ -6,6 +6,9 @@ import { DIRECTIONS } from "@/data/directions";
 import { buildPlan } from "@/data/plan";
 import { calculate, validateAnswers, maxScore, findProblem, type Answers } from "@/recommendation-engine";
 
+// Категория «Наука и исследования» добавлена на этапе 4 и покрыта диагностикой v3 (tests/assessment.test.ts), а не старым тестом v2.
+const LEGACY_CATEGORIES = CATEGORIES.filter((c) => c.id !== "science");
+
 const V1 = TEST_VERSIONS[1];
 const V2 = TEST_VERSIONS[2];
 
@@ -63,7 +66,7 @@ describe("тест: версии и вопросы", () => {
     expect(findProblem(all("a", V2), V1)).toBeNull(); // лишние ответы не мешают
   });
   it("каждая категория упоминается в вопросах версии 2", () => {
-    CATEGORIES.forEach((c) => {
+    LEGACY_CATEGORIES.forEach((c) => {
       const used = V2.some((q) => q.options.some((o) => o.categories?.[c.id]));
       expect(used, c.name).toBe(true);
     });
@@ -166,13 +169,13 @@ describe("версия 1 (старые результаты)", () => {
 });
 
 describe("совпадение по интересам (версия 2)", () => {
-  it.each(CATEGORIES.map((c) => c.id))("ответы в пользу категории %s поднимают её в топ-3 категорий", (cat) => {
+  it.each(LEGACY_CATEGORIES.map((c) => c.id))("ответы в пользу категории %s поднимают её в топ-3 категорий", (cat) => {
     const r = calculate(favorCategory(cat));
     const top3 = [...r.categories].sort((a, b) => b.percent - a.percent).slice(0, 3).map((c) => c.id);
     expect(top3).toContain(cat);
   });
 
-  it.each(CATEGORIES.map((c) => c.id))("ответы в пользу категории %s дают в топ-15 профессию из неё", (cat) => {
+  it.each(LEGACY_CATEGORIES.map((c) => c.id))("ответы в пользу категории %s дают в топ-15 профессию из неё", (cat) => {
     const r = calculate(favorCategory(cat));
     const top = r.professions.slice(0, 15).map((m) => m.profession.category);
     expect(top).toContain(cat);
