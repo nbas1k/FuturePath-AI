@@ -112,3 +112,20 @@ test("английский интерфейс урока и 320px без гор�
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow).toBeLessThanOrEqual(0);
 });
+test("маршруты: 4 профессиональных и 12 универсальных навыков, выбранная профессия даёт кнопку «Продолжить»", async ({ page }) => {
+  await page.request.post("/api/onboarding", { data: { complete: true } });
+  await page.goto("/learn");
+  await expect(page.getByRole("link", { name: /Уточнение|Дополнительные инструменты/ }).first()).toBeVisible();
+  const skillLinks = page.locator('a[href^="/learn/track/skill"]');
+  await expect(skillLinks).toHaveCount(12);
+
+  const sel = await page.request.post("/api/journey/select", { data: { professionId: "doctor" } });
+  expect(sel.ok()).toBe(true);
+  await page.goto("/learn");
+  await expect(page.getByRole("heading", { name: "Врач" }).or(page.getByText("Врач").first())).toBeVisible();
+  await page.getByRole("link", { name: "Продолжить обучение" }).click();
+  await expect(page).toHaveURL(/\/learn\/lesson\/career:doctor~m1~l1/);
+  await page.goto("/learn/track/career%3Adoctor");
+  await expect(page.locator("ol > li")).toHaveCount(6);
+  await expect(page.getByRole("heading", { level: 2 })).toHaveCount(3);
+});

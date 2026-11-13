@@ -4,6 +4,7 @@
 import { PROFESSIONS, LEVEL_LABELS, type Profession } from "@/data/professions";
 import { subjectAreaName } from "@/data/categories";
 import { CYCLE_PROFESSIONS } from "@/data/cycle";
+import { TRACKS } from "@/content";
 import { professionProfile } from "@/assessment/careerProfiles";
 import { LETTERS, type Letter } from "@/assessment/items";
 import { CATEGORY_TO_DIRECTION, DIRECTION_OVERRIDES, type CareerDirection } from "./directions";
@@ -12,7 +13,7 @@ import { EXTRA_BY_ID, type Extra } from "./extras";
 export const UNIVERSAL_SKILLS = ["communication", "critical", "creativity", "problem", "teamwork", "emotional", "digital", "time", "leadership", "adaptability", "financial", "selflearning"] as const;
 export type UniversalSkill = (typeof UNIVERSAL_SKILLS)[number];
 
-export type Readiness = "intro" | "cycle";
+export type Readiness = "intro" | "cycle" | "route"; // route — полный учебный маршрут (модули и уроки)
 export type Titles = { ru: string; kk: string; en: string };
 
 export type Career = {
@@ -34,6 +35,7 @@ export type Career = {
   challenge: { question: string; options: string[]; why: string };
 };
 
+const ROUTE_CAREERS = new Set(TRACKS.filter((t) => t.kind === "career").map((t) => t.id.split(":")[1]));
 const hash = (s: string) => { let h = 0; for (const ch of s) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return h; };
 
 // Детерминированная ротация вариантов ответа, чтобы верный не стоял всегда на одном месте.
@@ -97,7 +99,7 @@ function build(p: Profession): Career {
     examples: p.projects,
     route: { study: p.study, growth: p.growth },
     holland: e.code,
-    readiness: CYCLE_PROFESSIONS.includes(p.id) ? "cycle" : "intro",
+    readiness: ROUTE_CAREERS.has(p.id) ? "route" : CYCLE_PROFESSIONS.includes(p.id) ? "cycle" : "intro",
     reviewStatus: "draft",
     challenge: { question: e.q, options: rot.options, why: e.why },
   };

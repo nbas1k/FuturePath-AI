@@ -24,6 +24,7 @@ export default async function TrackPage({ params }: { params: Promise<{ trackId:
     <div className="space-y-5">
       <Link href="/learn" className="text-sm font-bold text-indigo-700 dark:text-indigo-300">← {t("learn.back")}</Link>
       <h1 className="text-2xl font-extrabold">{name}</h1>
+      {lang !== "ru" && <p className="text-xs text-slate-500">{t("cat.ruOnly")}</p>}
       <PathMap track={track} t={t as any} />
     </div>
   );

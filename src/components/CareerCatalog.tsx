@@ -6,7 +6,7 @@ import { useI18n } from "@/i18n/client";
 import { DIRECTION_IDS, directionKey, type CareerDirection } from "@/catalog/directions";
 import type { MessageKey } from "@/i18n";
 
-type Item = { id: string; direction: CareerDirection; titles: { ru: string; kk: string; en: string }; readiness: "intro" | "cycle" };
+type Item = { id: string; direction: CareerDirection; titles: { ru: string; kk: string; en: string }; readiness: "intro" | "cycle" | "route" };
 
 export function CareerCatalog({ careers }: { careers: Item[] }) {
   const { t, lang } = useI18n();

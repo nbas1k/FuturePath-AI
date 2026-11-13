@@ -3,27 +3,35 @@ import { PASS_SCORE, REVIEW_SCORE, competencyScores, gradeExercise, lessonScore,
 import { toRow } from "@/learn/convert";
 import type { ExerciseDef } from "@/learn/types";
 
+// Варианты choice/multi перемешиваются, поэтому в тестах индексы задаются через «исходный» номер варианта: o(n) даёт индекс на экране.
+const rowOf = (def: ExerciseDef) => toRow(def, "t/e1", ["c1"]);
 const grade = (def: ExerciseDef, answer: unknown) => {
-  const row = toRow(def, "t/e1", ["c1"]);
+  const row = rowOf(def);
   return gradeExercise(row.type as any, row.data, row.answerKey, answer);
+};
+const screenIdx = (def: ExerciseDef & { options: unknown[] }, original: number) => {
+  const row = rowOf(def) as any;
+  const text = (def.options[original] as string);
+  return (row.data.options as { ru: string }[]).findIndex((o) => o.ru === text);
 };
 
 describe("проверка упражнений", () => {
   it("choice: верный, неверный, некорректный", () => {
     const d: ExerciseDef = { type: "choice", prompt: "?", options: ["a", "b", "c"], correct: 1, explain: "e" };
-    expect(grade(d, 1)).toEqual({ correct: true, score: 1 });
-    expect(grade(d, 0)).toEqual({ correct: false, score: 0 });
+    expect(grade(d, screenIdx(d, 1))).toEqual({ correct: true, score: 1 });
+    expect(grade(d, screenIdx(d, 0))).toEqual({ correct: false, score: 0 });
     expect(grade(d, 9)).toBeNull();
     expect(grade(d, "1")).toBeNull();
     expect(grade(d, 1.5)).toBeNull();
   });
   it("multi: точное совпадение, частичный балл со штрафом, дубли отклоняются", () => {
     const d: ExerciseDef = { type: "multi", prompt: "?", options: ["a", "b", "c", "d"], correct: [0, 2], explain: "e" };
-    expect(grade(d, [0, 2])).toEqual({ correct: true, score: 1 });
-    expect(grade(d, [2, 0])).toEqual({ correct: true, score: 1 });
-    expect(grade(d, [0])).toEqual({ correct: false, score: 0.5 });
-    expect(grade(d, [0, 1])).toEqual({ correct: false, score: 0 }); // 1 верный − 1 лишний
-    expect(grade(d, [0, 0])).toBeNull();
+    const s = (n: number) => screenIdx(d as any, n);
+    expect(grade(d, [s(0), s(2)])).toEqual({ correct: true, score: 1 });
+    expect(grade(d, [s(2), s(0)])).toEqual({ correct: true, score: 1 });
+    expect(grade(d, [s(0)])).toEqual({ correct: false, score: 0.5 });
+    expect(grade(d, [s(0), s(1)])).toEqual({ correct: false, score: 0 }); // 1 верный − 1 лишний
+    expect(grade(d, [s(0), s(0)])).toBeNull();
     expect(grade(d, [7])).toBeNull();
   });
   it("match: пары сопоставляются по смыслу, а не по позиции на экране", () => {
@@ -77,7 +85,8 @@ describe("проверка упражнений", () => {
   it("правильные ответы не попадают в data, которую видит ученик", () => {
     const row = toRow({ type: "choice", prompt: "?", options: ["a", "b"], correct: 1, explain: "e" }, "t/e1", []);
     expect(JSON.stringify(row.data)).not.toContain("correct");
-    expect(row.answerKey).toEqual({ correct: 1 });
+    const shown = (row.data.options as { ru: string }[]).map((o) => o.ru);
+    expect(shown[(row.answerKey as { correct: number }).correct]).toBe("b"); // ключ указывает на верный вариант после перемешивания
   });
 });
 

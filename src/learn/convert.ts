@@ -12,10 +12,15 @@ export function toRow(def: ExerciseDef, rowId: string, lessonComps: string[]): E
   const base = { phase: def.phase ?? "check", type: def.type, prompt: lText(def.prompt), explanation: lText(def.explain), competencies: comps, verified: def.type !== "project" };
   switch (def.type) {
     case "choice":
-    case "case":
-      return { ...base, data: { options: def.options.map(lText), ...(def.scenario ? { scenario: lText(def.scenario) } : {}), ...(def.optionFeedback ? { optionFeedback: def.optionFeedback.map(lText) } : {}) }, answerKey: { correct: def.correct } };
-    case "multi":
-      return { ...base, data: { options: def.options.map(lText) }, answerKey: { correct: def.correct } };
+    case "case": {
+      // Варианты перемешиваются детерминированно (по id задания), чтобы верный ответ не стоял всегда на одном месте.
+      const perm = seededShuffle(def.options.map((_, i) => i), rowId);
+      return { ...base, data: { options: perm.map((i) => lText(def.options[i])), ...(def.scenario ? { scenario: lText(def.scenario) } : {}), ...(def.optionFeedback ? { optionFeedback: perm.map((i) => lText(def.optionFeedback![i])) } : {}) }, answerKey: { correct: perm.indexOf(def.correct) } };
+    }
+    case "multi": {
+      const perm = seededShuffle(def.options.map((_, i) => i), rowId);
+      return { ...base, data: { options: perm.map((i) => lText(def.options[i])) }, answerKey: { correct: def.correct.map((c) => perm.indexOf(c)).sort((a, b) => a - b) } };
+    }
     case "match": {
       const right = def.pairs.map((p, i) => ({ t: lText(p[1]), i }));
       const shuffled = seededShuffle(right, rowId);

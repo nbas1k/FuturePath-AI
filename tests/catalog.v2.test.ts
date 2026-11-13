@@ -37,7 +37,7 @@ describe("каталог 2.0", () => {
       expect(c.topUniversal).toHaveLength(4);
       expect(c.holland, c.id).toMatch(/^[RIASEC]{3}$/);
       expect(new Set(c.holland).size, c.id).toBe(3);
-      expect(["intro", "cycle"]).toContain(c.readiness);
+      expect(["intro", "cycle", "route"]).toContain(c.readiness);
       expect(c.reviewStatus).toBe("draft"); // не выдаём за проверенное экспертами
     }
   });
