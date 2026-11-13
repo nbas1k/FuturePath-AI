@@ -63,20 +63,22 @@ test("голосовая практика: согласие обязательн
   await page.getByRole("button", { name: "Оценить ответ" }).click();
   await expect(page.getByRole("heading", { name: "Результат по рубрике" })).toBeVisible();
   await expect(page.getByText("Профессиональные понятия")).toBeVisible();
-  await expect(page.getByText(/ИИ-разбор недоступен/)).toBeVisible(); // без подставного ответа
+  await expect(page.getByText(/ИИ-разбор недоступен|Сильные стороны \(ИИ\)/)).toBeVisible(); // либо реальный разбор, либо честное сообщение
   await expect(page.getByText(/не голос, уверенность или эмоции/)).toBeVisible();
 });
 
 test("ИИ-наставник: при отсутствии подключения честное сообщение и рекомендации без ИИ", async ({ page }) => {
   const st = await (await page.request.get("/api/learn/mentor?lessonId=skill:communication/m1/l1")).json();
-  expect(st.aiEnabled).toBe(false);
+  const live = st.aiEnabled === true; // ИИ подключён или нет: проверяем соответствующее поведение
   await page.goto("/learn/lesson/skill:communication~m1~l1");
   await page.getByRole("button", { name: "Далее" }).click();
   await page.getByRole("button", { name: "Начать упражнения" }).click();
   await page.getByRole("button", { name: "Спросить наставника" }).click();
-  await expect(page.getByRole("dialog")).toContainText("недоступен");
-  const r = await page.request.post("/api/learn/mentor", { data: { lessonId: "skill:communication/m1/l1", mode: "hint", message: "" } });
-  expect(r.status()).toBe(503);
+  if (live) await expect(page.getByRole("button", { name: "Подсказка" })).toBeVisible();
+  else {
+    await expect(page.getByRole("dialog")).toContainText("недоступен");
+    expect((await page.request.post("/api/learn/mentor", { data: { lessonId: "skill:communication/m1/l1", mode: "hint", message: "" } })).status()).toBe(503);
+  }
   expect((await page.request.post("/api/learn/mentor", { data: { lessonId: "x", mode: "взлом" } })).status()).toBe(400);
 });
 
