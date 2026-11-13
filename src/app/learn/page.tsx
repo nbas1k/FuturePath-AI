@@ -6,6 +6,7 @@ import { getTrack, listTracks } from "@/backend/learn";
 import { getCareer } from "@/catalog/build";
 import { getT } from "@/i18n/server";
 import { trackSlug } from "@/learn/slug";
+import { VOICE_PROMPTS } from "@/voice/score";
 import type { MessageKey } from "@/i18n";
 
 export const dynamic = "force-dynamic";
@@ -76,6 +77,11 @@ export default async function LearnHome({ searchParams }: { searchParams: Promis
           </ul>
         </section>
       )}
+
+      <section className="space-y-3" aria-labelledby="v-h">
+        <h2 id="v-h" className="text-lg font-extrabold">{t("learn.voice")}</h2>
+        <ul className="grid gap-3 sm:grid-cols-2">{VOICE_PROMPTS.map((v) => <li key={v.id}><Link href={`/learn/voice/${v.id}`} className="card block !py-3 font-extrabold hover:bg-slate-50 dark:hover:bg-slate-800">{v.title}</Link></li>)}</ul>
+      </section>
 
       <Link href="/learn/tools" className="inline-block text-sm font-bold text-indigo-700 underline dark:text-indigo-300">{t("learn.openTools")}</Link>
     </div>

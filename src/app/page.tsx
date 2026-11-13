@@ -4,6 +4,7 @@ import { getProfile } from "@/backend/profile";
 import { loadJourney } from "@/backend/journeyContext";
 import { getT } from "@/i18n/server";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { loadProgress } from "@/backend/progress";
 
 export const dynamic = "force-dynamic";
 
@@ -26,9 +27,9 @@ export default async function Home() {
   const data = await loadJourney();
   const step = data.journey.steps.find((s) => s.current) ?? null;
   const goal = Math.max(1, profile.dailyGoalXp);
-  const today = new Date().toISOString().slice(0, 10);
   // XP за сегодня появится вместе с журналом XP (этап 10); пока показываем только то, что реально сохранено.
-  const xpToday = profile.lastActiveDay === today ? Math.min(profile.xp, goal) : 0;
+  const prog = await loadProgress(profile.id, lang);
+  const xpToday = Math.min(prog.todayXp, goal);
   const pct = Math.round((xpToday / goal) * 100);
 
   const recs = [
@@ -68,7 +69,7 @@ export default async function Home() {
       <section className="grid grid-cols-3 gap-3" aria-label={t("home.dailyGoal")}>
         <div className="card flex flex-col items-center gap-1 !p-3 text-center"><Target size={22} className="text-violet-500" aria-hidden /><span className="text-xl font-extrabold">{xpToday}/{goal}</span><span className="text-xs font-semibold text-slate-500">{t("home.dailyGoal")}</span></div>
         <div className="card flex flex-col items-center gap-1 !p-3 text-center"><Zap size={22} className="text-amber-500" aria-hidden /><span className="text-xl font-extrabold">{profile.xp}</span><span className="text-xs font-semibold text-slate-500">{t("home.xp")}</span></div>
-        <div className="card flex flex-col items-center gap-1 !p-3 text-center"><Flame size={22} className="text-orange-500" aria-hidden /><span className="text-xl font-extrabold">{profile.streakDays}</span><span className="text-xs font-semibold text-slate-500">{t("home.streak")}</span></div>
+        <div className="card flex flex-col items-center gap-1 !p-3 text-center"><Flame size={22} className="text-orange-500" aria-hidden /><span className="text-xl font-extrabold">{prog.streak}</span><span className="text-xs font-semibold text-slate-500">{t("home.streak")}</span></div>
       </section>
       <div className="h-3 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label={t("home.dailyGoal")}>
         <div className="h-full rounded-full bg-indigo-500 transition-[width] duration-300" style={{ width: `${pct}%` }} />

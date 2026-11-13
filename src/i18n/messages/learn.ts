@@ -1,6 +1,7 @@
 // Строки обучения: карта маршрута и плеер урока. Подключаются в ru.ts / en.ts / kk.ts.
 export const learnRu = {
   "learn.title": "Обучение",
+  "learn.voice": "Голосовая практика",
   "learn.career": "Ваша профессия",
   "learn.skills": "Универсальные навыки",
   "learn.openTools": "Дополнительные инструменты",
@@ -63,6 +64,7 @@ export type LearnKey = keyof typeof learnRu;
 
 export const learnEn: Record<LearnKey, string> = {
   "learn.title": "Learn",
+  "learn.voice": "Speaking practice",
   "learn.career": "Your career",
   "learn.skills": "Universal skills",
   "learn.openTools": "Extra tools",
@@ -124,6 +126,7 @@ export const learnEn: Record<LearnKey, string> = {
 // Қазақша: тіл иесі тексеруі қажет.
 export const learnKk: Record<LearnKey, string> = {
   "learn.title": "Оқу",
+  "learn.voice": "Сөйлеу жаттығуы",
   "learn.career": "Сіздің мамандығыңыз",
   "learn.skills": "Әмбебап дағдылар",
   "learn.openTools": "Қосымша құралдар",
