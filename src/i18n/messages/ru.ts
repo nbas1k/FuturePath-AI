@@ -1,3 +1,4 @@
+import { assessmentRu } from "./assessment";
 // Русский — язык-источник. Все ключи интерфейса нового UI живут здесь.
 export const ru = {
   "app.name": "FuturePath AI",
@@ -84,6 +85,7 @@ export const ru = {
   "home.rec.learn": "Открыть обучение",
   "home.rec.progress": "Посмотреть прогресс",
   "profile.language": "Язык",
+  ...assessmentRu,
 } as const;
 
 export type MessageKey = keyof typeof ru;

@@ -1,4 +1,5 @@
 import type { MessageKey } from "./ru";
+import { assessmentEn } from "./assessment";
 
 export const en: Record<MessageKey, string> = {
   "app.name": "FuturePath AI",
@@ -85,4 +86,6 @@ export const en: Record<MessageKey, string> = {
   "home.rec.learn": "Open learning",
   "home.rec.progress": "See your progress",
   "profile.language": "Language",
+  ...assessmentEn,
+
 };

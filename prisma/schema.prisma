@@ -30,6 +30,7 @@ model Profile {
   xp                 Int               @default(0)
   streakDays         Int               @default(0)
   lastActiveDay      String? // YYYY-MM-DD
+  assessments      Assessment[]
   skillChecks        SkillCheck[]
   practiceAnswers    PracticeAnswer[]
   lessonReads        LessonRead[]
@@ -263,4 +264,21 @@ model CycleAiHelp {
   correct Boolean
 
   @@unique([runId, taskId])
+}
+
+// Диагностика v3. answers — { id вопроса: число }, обновляется атомарно (jsonb ||), result — сохранённый итог.
+// Результат всегда пересчитывается на сервере из answers; клиенту не доверяем.
+model Assessment {
+  id          String    @id @default(cuid())
+  profileId   String
+  profile     Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  version     Int       @default(3)
+  status      String    @default("in_progress") // in_progress | completed
+  answers     Json      @default("{}")
+  result      Json?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  completedAt DateTime?
+
+  @@index([profileId, createdAt])
 }

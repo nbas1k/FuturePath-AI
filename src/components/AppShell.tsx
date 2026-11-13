@@ -10,7 +10,7 @@ import type { MessageKey } from "@/i18n";
 // Ровно 5 разделов. Остальные страницы открываются изнутри них.
 const SECTIONS: { href: string; key: MessageKey; icon: typeof Home; match: string[] }[] = [
   { href: "/", key: "nav.home", icon: Home, match: ["/", "/features"] },
-  { href: "/professions", key: "nav.professions", icon: Compass, match: ["/professions", "/compare", "/test", "/result"] },
+  { href: "/professions", key: "nav.professions", icon: Compass, match: ["/professions", "/compare", "/test", "/result", "/assessment"] },
   { href: "/learn", key: "nav.learn", icon: GraduationCap, match: ["/learn", "/plan", "/ai"] },
   { href: "/path", key: "nav.progress", icon: TrendingUp, match: ["/path"] },
   { href: "/profile", key: "nav.profile", icon: User, match: ["/profile", "/cabinet"] },
@@ -26,7 +26,7 @@ function isActive(path: string, match: string[]) {
 export function AppShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const { t } = useI18n();
-  if (FULLSCREEN.some((p) => path === p || path.startsWith(p + "/"))) {
+  if (path === "/assessment" || FULLSCREEN.some((p) => path === p || path.startsWith(p + "/"))) {
     return <main className="mx-auto min-h-dvh w-full max-w-xl px-4 py-6">{children}</main>;
   }
   return (

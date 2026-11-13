@@ -183,7 +183,7 @@ export function OnboardingFlow({ initial }: { initial: State }) {
           )}
           {step === 5 && (
             <>
-              <button className="btn-primary w-full !text-base" disabled={saving} onClick={() => finish("/test")}>{t("ob.diag.start")}</button>
+              <button className="btn-primary w-full !text-base" disabled={saving} onClick={() => finish("/assessment")}>{t("ob.diag.start")}</button>
               <button className="btn-ghost w-full" disabled={saving} onClick={() => finish("/professions")}>{t("ob.diag.later")}</button>
             </>
           )}
